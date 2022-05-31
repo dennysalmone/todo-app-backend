@@ -1,64 +1,100 @@
 const { Router } = require('express')
 const Todo = require("../models/Todo")
+const TodoList = require("../models/TodoList")
 const router = Router()
 var bodyParser = require('body-parser')
-let data = [
-    // {id:0, title: "это не использутся но пусть побудет", status: false}
-];
 
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
 
-router.get('/get-to-front', async (req, res) => {
-    // идешь в монгу и извлекаешь тудухи 
-    // res.send(твои ебаные тудухи которые ты получил с монги)
-    const todos = await Todo.find({})
-    console.log(`${todos} was getted`)
-    res.send(todos)
+router.get('/todo', async (req, res) => {
+    const todos = await TodoList.find({});
+    console.log(`todos was getted`);
+    res.send(todos);
 })
 
-router.delete('/delete-from-front', async (req, res) => {
-    const todo = new Todo({
-        id: req.body.id,
-        title: req.body.title,
-        status: req.body.status
-    })
+router.put('/todo', async (req, res) => {
+    // неактуальный запрос на смену статуса, заменить на пут.драгендропп
+    // const todo = new Todo({
+    //     id: req.body.id,
+    //     title: req.body.title,
+    //     status: req.body.status,
+    // })
+    // try {
+    //     await Todo.findOneAndReplace({id:todo.id, title: todo.title, status: !todo.status},{id:todo.id, title: todo.title, status: todo.status})
+    //     console.log(`${todo} was changed`);
+    // } catch (e) {
+    //     console.log(`Error: ${e.message}`);
+    // }
+})
+
+router.delete('/todo-list', async (req, res) => {
+    const todoList = new TodoList({
+        name: req.body.name,
+        collectionId: req.body.collectionId,
+        todos: req.body.todos,
+    });
     try {
-        await Todo.remove({ id: todo.id, title: todo.title })
-        console.log(`${todo} was deleted`)
+        await TodoList.remove({ name: todoList.name, collectionId: todoList.collectionId, todos: todoList.todos})
+        console.log(`${todoList} was deleted`);
     } catch (e) {
-        console.log(`Error: ${e.message}`)
+        console.log(`Error: ${e.message}`);
     }
 })
 
-router.put('/put-from-front', async (req, res) => {
-    const todo = new Todo({
-        id: req.body.id,
-        title: req.body.title,
-        status: req.body.status
-    })
+router.post('/todo-list', async (req, res) => {
+    const todoList = new TodoList({
+        name: req.body.name,
+        collectionId: req.body.collectionId,
+        todos: req.body.todos,
+    });
     try {
-        await Todo.findOneAndReplace({id:todo.id, title: todo.title, status: !todo.status},{id:todo.id, title: todo.title, status: todo.status})
-        console.log(`${todo} was changed`)
+        await todoList.save(); // должно работать, позже проверить
+        console.log(`${todoList} was posted`);
     } catch (e) {
-        console.log(`Error: ${e.message}`)
+        console.log(`Error: ${e.message}`);
     }
 })
 
-router.post('/post-from-front', async (req, res) => {
-    // получаешь тело запроса 
-    // записываешь в монгу 
-    // отправляешь статус 200 типо, все заебись, записалось
+router.post('/todo', async (req, res) => {
+    const todoList = await TodoList.findOne();
     const todo = new Todo({
         id: req.body.id,
         title: req.body.title,
-        status: req.body.status
+        status: req.body.status,
       })
+      todoList.todos.push(todo);
     try {
-        await todo.save()
-        console.log(`${todo} was posted`)
+        await todoList.save();
+        console.log(`${todoList} was posted`);
     } catch (e) {
-        console.log(`Error: ${e.message}`)
+        console.log(`Error: ${e.message}`);
+    }
+})
+
+router.delete('/todo', async (req, res) => {
+    const todoList = await TodoList.find({});
+    const todo = new Todo({
+        id: req.body.id,
+        title: req.body.title,
+        status: req.body.status,
+    });
+    let idOfTodoList;
+    let idOfTodo;
+    for (let i=0; i<todoList.length; i++) {
+        for (let j=0; j<todoList[i].todos.length; j++) {
+            if (todoList[i].todos[j].id === todo.id && todoList[i].todos[j].title === todo.title && todoList[i].todos[j].status === todo.status ) {
+                idOfTodoList = todoList[i].collectionId
+                idOfTodo = todoList[i].todos[j].id
+                break;
+            }
+        }
+    }
+    try {
+        await TodoList.updateOne({collectionId: idOfTodoList}, {$pull : { todos : {id : idOfTodo} } } );
+        console.log(`WAS DELETED`);
+    } catch (e) {
+        console.log(`Error: ${e.message}`);
     }
 })
 
