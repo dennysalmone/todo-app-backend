@@ -3,9 +3,12 @@ const mongoose = require('mongoose')
 const todoRoutes = require('./routes/todos');
 const PORT = process.env.PORT || 3000
 const app = express() //сервер
+const auth = require('./middleware/auth.js');
 let mongoURL = 'mongodb+srv://dennysalmone777:dennysalmone7771@clusterdenny.pedk5.mongodb.net/denny-todos'
 
-app.use(todoRoutes)
+
+app.use(auth);
+app.use(todoRoutes);
 
 async function start() {
     try {
