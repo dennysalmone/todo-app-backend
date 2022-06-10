@@ -2,8 +2,9 @@ const {Schema, model} = require("mongoose")
 // const Todo = require("../models/Todo")
 
 const schema = new Schema({
-    name:{type: String},
-    collectionId:{type: Number},
+    name:{type: String, required: true},
+    collectionId:{type: Number, required: true},
+    userEmail: {type: String},
     todos:[{
         id: {
             type: Number,
@@ -16,7 +17,7 @@ const schema = new Schema({
         status: {
             type: Boolean,
             required: true
-        }
+        },
     }]
 }) 
 
