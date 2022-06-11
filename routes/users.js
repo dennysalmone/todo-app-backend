@@ -24,18 +24,18 @@ router.post(
         if (!errors.isEmpty()) {
             return res.status(400).json({
                 errors: errors.array(),
-                message: 'Некорректные данные при регистрации'
+                message: 'Incorrect data during registration'
             })
         }
 
         const user = await User.findOne({email: req.body.email})
         if (!user) {
-            return res.status(400).json({message: "Пользователь не найден"})
+            return res.status(400).json({message: "user is not found"})
         }
 
         const isMatch = await bcrypt.compare(req.body.password, user.password)
         if (!isMatch) {
-            return res.status(400).json({message: 'Неверный пароль'})
+            return res.status(400).json({message: 'invalid password'})
         }
 
         const token = jwt.sign(
@@ -44,7 +44,7 @@ router.post(
             { expiresIn: '1h'}
         )
         console.log(`Request accepted i give you token`)
-        res.json({token: `${token}`}) // !!!
+        res.json({token: `${token}`})
 
     }
     catch (e) {
@@ -79,7 +79,7 @@ router.post(
         })
         await user.save()
         console.log(`Пользователь создан по почте ${req.body.email}`)
-        res.status(201).json({message: 'User had created'})
+        return res.status(201).json({message: 'User had created'})
     }
     catch (e) {
         res.status(500).json({message: e.message})

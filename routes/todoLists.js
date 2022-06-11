@@ -13,18 +13,33 @@ router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
 
 router.get('/todo', async (req, res) => {
+    let user = User.findOne({email: req.headers["email"]})
+    if(!user){
+        return res.status(400).json({message:'no auth'})
+    }
     const todoList = await TodoList.find({userEmail: req.headers["email"]});
     console.log(`todoList was getted`);
-    res.send(todoList);
+    if(!todoList){
+        return res.status(404).json({message: 'not found'})
+    }
+    res.status(200).json(todoList)
+    // res.send(todoList);
 })
 
 router.delete('/todo-list', async (req, res) => {
+    let user = User.findOne({email: req.headers["email"]})
+    if(!user){
+        return res.status(400).json({message:'no auth'})
+    }
     const todoList = new TodoList({
         name: req.body.name,
         collectionId: req.body.collectionId,
         todos: req.body.todos,
         userEmail: req.headers["email"]
     });
+    if(!todoList){
+        return res.status(404).json({message: 'not found'})
+    }
     try {
         await TodoList.deleteOne({ name: todoList.name, collectionId: todoList.collectionId, todos: todoList.todos, userEmail: req.headers["email"]})
         console.log(`todolist with id ${todoList.collectionId} was deleted`);
@@ -34,12 +49,19 @@ router.delete('/todo-list', async (req, res) => {
 })
 
 router.post('/todo-list', async (req, res) => {
+    let user = User.findOne({email: req.headers["email"]})
+    if(!user){
+        return res.status(400).json({message:'no auth'})
+    }
     const todoList = new TodoList({
         name: req.body.name,
         collectionId: req.body.collectionId,
         todos: req.body.todos,
         userEmail: req.headers["email"]
     });
+    if(!todoList){
+        return res.status(404).json({message: 'not found'})
+    }
     try {
         await todoList.save(); // должно работать, позже проверить
         console.log(`todolist with id ${todoList.collectionId} was posted`);

@@ -14,7 +14,7 @@ module.exports = (req,res,next) => {
         }
     } catch(e){ 
         console.log(e)
-        return res.status(401).json({message: 'Что-то не так с токеном'});
+        return res.status(401).json({message: 'Account session timed out'});
     }
     return next();
 }

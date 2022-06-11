@@ -13,6 +13,10 @@ router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
 
 router.post('/todo', async (req, res) => {
+    let user = User.findOne({email: req.headers["email"]})
+    if(!user){
+        return res.status(400).json({message:'no auth'})
+    }
     const todoList = await TodoList.findOne({userEmail: req.headers["email"]});
     const todo = new Todo({
         id: req.body.id,
@@ -29,6 +33,10 @@ router.post('/todo', async (req, res) => {
 })
 
 router.post('/change', async (req, res) => {
+    let user = User.findOne({email: req.headers["email"]})
+    if(!user){
+        return res.status(400).json({message:'no auth'})
+    }
     let todoList = await TodoList.find({});
     let todo = new Todo({
         id: req.body.todo.id,
@@ -68,7 +76,11 @@ router.post('/change', async (req, res) => {
     }
 })
 
-router.delete('/todo', async (req, res) => {
+router.delete('/todo-delete', async (req, res) => {
+    let user = User.findOne({email: req.headers["email"]})
+    if(!user){
+        return res.status(400).json({message:'no auth'})
+    }
     let todoList = await TodoList.find({userEmail: req.headers["email"]});
     let todo = new Todo({
         id: req.body.id,
