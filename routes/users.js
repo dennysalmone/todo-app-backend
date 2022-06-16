@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken')
 const router = Router()
 const bodyParser = require('body-parser')
 const User = require('../models/User')
+const Counter = require('../models/Counter')
 const {check, validationResult} = require('express-validator')
 const privateKey = 'BJ8Hf0HBm%y%6h2'
 
