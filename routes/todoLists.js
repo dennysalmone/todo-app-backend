@@ -24,7 +24,6 @@ router.get('/todo', async (req, res) => {
         return res.status(404).json({message: 'not found'})
     }
     res.status(200).json(todoList)
-    // res.send(todoList);
 })
 
 router.delete('/todo-list', async (req, res) => {
