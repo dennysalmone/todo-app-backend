@@ -4,6 +4,7 @@ const mongoose = require('mongoose')
 const todoRoutes = require('./routes/todos');
 const todoListsRoutes = require('./routes/todoLists');
 const usersRoutes = require('./routes/users');
+const board = require('./routes/board');
 
 const PORT = process.env.PORT || 3000
 const app = express() //сервер
@@ -15,6 +16,7 @@ app.use(auth);
 app.use(todoRoutes);
 app.use(todoListsRoutes);
 app.use(usersRoutes);
+app.use(board);
 
 async function start() {
     try {

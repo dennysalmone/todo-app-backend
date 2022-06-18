@@ -1,6 +1,7 @@
 const { Router } = require('express')
 const Todo = require("../models/Todo")
 const TodoList = require("../models/TodoList")
+const Board = require("../models/Board")
 const bcrypt = require("bcryptjs")
 const jwt = require('jsonwebtoken')
 const router = Router()
@@ -14,67 +15,37 @@ router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
 
 router.post('/todo', async (req, res) => {
-    let user = User.findOne({email: req.headers["email"]})
+    const user = User.findOne({email: req.headers["email"]})
     if(!user){
         return res.status(400).json({message:'no auth'})
     }
-    let counter = await Counter.findOne({name: 'default'});
-    const todoList = await TodoList.findOne({userEmail: req.headers["email"], collectionId: req.body[1]});
+    const counter = await Counter.findOne({name: 'default'});
+    const board = await Board.findOne({id: req.body[2].boardId, author: req.headers["email"]});
+    let boardIndex;
+    for (let i=0; i<board.lists.length; i++) {
+        if (board.lists[i].collectionId === req.body[1].collId) {
+            boardIndex = i;
+            break;
+        }
+    }
     const todo = new Todo({
         id: counter.todosIDs++,
         title: req.body[0].title,
         status: true,
     })
-    todoList.todos.push(todo);
+    console.log(todo, req.body, counter, boardIndex)
+    if(!todo || !counter){
+        return res.status(404).json({message: 'not found'})
+    }
+    if(!boardIndex && boardIndex!== 0){
+        return res.status(404).json({message: 'boardIndex not found'})
+    }
+    board.lists[boardIndex].todos.push(todo);
     try {
-        await todoList.save();
+        await board.save();
         await Counter.updateOne({name: 'default'}, {$inc: { todosIDs: 1 }} ); // delete old
         res.status(200).json(todo)
-        console.log(`${todo.title} was posted`);
-    } catch (e) {
-        console.log(`Error: ${e.message}`);
-    }
-})
-
-router.post('/change', async (req, res) => {
-    let user = User.findOne({email: req.headers["email"]})
-    if(!user){
-        return res.status(400).json({message:'no auth'})
-    }
-    let todoList = await TodoList.find({});
-    let todo = new Todo({
-        id: req.body.todo.id,
-        title: req.body.todo.title,
-        status: req.body.todo.status,
-    });
-    let newCollId = req.body.newListCollectionId;
-    let newTaskIndex = req.body.newTaskIndex;
-
-    let idOfTodoList;
-    let idOfTodo;
-    for (let i=0; i<todoList.length; i++) {
-        for (let j=0; j<todoList[i].todos.length; j++) {
-            if (todoList[i].todos[j].id === todo.id && todoList[i].todos[j].title === todo.title && todoList[i].todos[j].status === todo.status ) {
-                idOfTodoList = todoList[i].collectionId
-                idOfTodo = todoList[i].todos[j].id
-                todoList[i].todos.splice(j, 1);
-                break;
-            }
-        }
-    } // delete old
-
-    let indexOfTodoList;
-    for (let i=0; i<todoList.length; i++) {
-        if (todoList[i].collectionId === newCollId && todoList[i].userEmail == req.headers["email"]) {
-            todoList[i].todos.splice(newTaskIndex, 0, todo);
-            indexOfTodoList = i
-        }
-    } // add new
-
-    try {
-        await TodoList.updateOne({collectionId: idOfTodoList, userEmail: req.headers["email"]}, {$pull : { todos : { id : idOfTodo} } } ); // delete old
-        await todoList[indexOfTodoList].save(); // add new
-        console.log(`drag and drop was happened`);
+        console.log(`todo was posted`);
     } catch (e) {
         console.log(`Error: ${e.message}`);
     }
@@ -85,30 +56,78 @@ router.delete('/todo-delete', async (req, res) => {
     if(!user){
         return res.status(400).json({message:'no auth'})
     }
-    let todoList = await TodoList.find({userEmail: req.headers["email"]});
-    let todo = new Todo({
-        id: req.body.id,
-        title: req.body.title,
-        status: req.body.status,
-    });
-    if(!todo || !todoList){
+    let board = await Board.findOne({id: req.body[2].boardId, author: req.headers["email"]});
+    let boardIndex;
+    let todoIndex;
+    for (let i=0; i<board.lists.length; i++) {
+        if (board.lists[i].collectionId === req.body[1].collId) {
+            boardIndex = i;
+            break;
+        }
+    }
+    for (let j=0; j<board.lists[boardIndex].todos.length; j++) {
+        if (board.lists[boardIndex].todos[j].id === req.body[0].task.id) {
+            todoIndex = j;
+            break;
+        }
+    }
+    if(!board){
         return res.status(404).json({message:'not found'})
     }   
-    let idOfTodoList;
-    let idOfTodo;
-    for (let i=0; i<todoList.length; i++) {
-        for (let j=0; j<todoList[i].todos.length; j++) {
-            if (todoList[i].todos[j].id === todo.id && todoList[i].todos[j].title === todo.title && todoList[i].todos[j].status === todo.status ) {
-                idOfTodoList = todoList[i].collectionId
-                idOfTodo = todoList[i].todos[j].id
+    if(!boardIndex && boardIndex!== 0){
+        return res.status(404).json({message: 'boardIndex not found'})
+    }
+    if(!todoIndex && todoIndex!== 0){
+        return res.status(404).json({message: 'todoIndex not found'})
+    }
+    board.lists[boardIndex].todos.splice(todoIndex, 1);
+    try {
+        await board.save();
+        res.status(200).json({message:'WAS DELETED'})
+        console.log(`WAS DELETED`);
+    } catch (e) {
+        console.log(`Error: ${e.message}`);
+    }
+})
+
+router.post('/change', async (req, res) => {
+    let user = User.findOne({email: req.headers["email"]})
+    if(!user){
+        return res.status(400).json({message:'no auth'})
+    }
+    console.log(req.body)
+    let board = await Board.findOne({id: req.body.boardId, author: req.headers["email"]});
+    let boardIndex;
+    let todoIndex;
+    for (let i=0; i<board.lists.length; i++) {
+        for (let j=0; j<board.lists[i].todos.length; j++) {
+            if (board.lists[i].todos[j].id === req.body.todo.id) {
+                todoIndex = j;
+                boardIndex = i;
                 break;
             }
         }
     }
+    if(!boardIndex && boardIndex!== 0){
+        return res.status(404).json({message: 'boardIndex not found'})
+    }
+    if(!todoIndex && todoIndex!== 0){
+        return res.status(404).json({message: 'todoIndex not found'})
+    }
+    board.lists[boardIndex].todos.splice(todoIndex, 1); // delete
+
+    let indexOfTodoList;
+    for (let i=0; i<board.lists.length; i++) {
+        if (board.lists[i].collectionId === req.body.newListCollectionId) {
+            indexOfTodoList = i;
+            console.log(i)
+        }
+    }
+    board.lists[indexOfTodoList].todos.splice(req.body.newTaskIndex, 0, req.body.todo)
+
     try {
-        await TodoList.updateOne({collectionId: idOfTodoList}, {$pull : { todos : { id : idOfTodo} } } );
-        res.status(200).json({message:'WAS DELETED'})
-        console.log(`WAS DELETED`);
+        await board.save();
+        console.log(`drag and drop was happened`);
     } catch (e) {
         console.log(`Error: ${e.message}`);
     }

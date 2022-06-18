@@ -1,6 +1,7 @@
 const { Router } = require('express')
 const Todo = require("../models/Todo")
 const TodoList = require("../models/TodoList")
+const Board = require("../models/Board")
 const bcrypt = require("bcryptjs")
 const jwt = require('jsonwebtoken')
 const router = Router()
@@ -68,7 +69,7 @@ router.post(
                 message: 'Некорректные данные при входе'
             })
         }
-
+        let counter = await Counter.findOne({name: 'default'});
         let candidate = await User.findOne({email: req.body.email})
         if (candidate) {
             return res.status(400).json({message: 'This use alredy exists'})
@@ -77,8 +78,10 @@ router.post(
         const user = new User({
             email: req.body.email,
             password: hashedPassword,
+            userId: counter.userIDs++
         })
         await user.save()
+        await Counter.updateOne({name: 'default'}, {$inc: { userIDs: 1 }} );
         console.log(`Пользователь создан по почте ${req.body.email}`)
         return res.status(201).json({message: 'User had created'})
     }
