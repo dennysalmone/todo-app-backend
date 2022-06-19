@@ -1,11 +1,8 @@
 const {Schema, model} = require("mongoose")
 
 const schema = new Schema ({
-    todosIDs: { type: Number, required: true },
-    listsIDs: { type: Number, required: true },
-    boardIDs: { type: Number, required: true },
-    userIDs: { type: Number, required: true },
-    name: { type: String, required: true }
+    idCounter: { type: Number, required: true, default: 100 },
+    name: { type: String, required: true, default: 'default' }
 })
 
 module.exports = model('Counter', schema)

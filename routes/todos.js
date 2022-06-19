@@ -20,20 +20,19 @@ router.post('/todo', async (req, res) => {
         return res.status(400).json({message:'no auth'})
     }
     const counter = await Counter.findOne({name: 'default'});
-    const board = await Board.findOne({id: req.body[2].boardId, author: req.headers["email"]});
+    const board = await Board.findOne({id: req.body.boardId, author: req.headers["email"]});
     let boardIndex;
     for (let i=0; i<board.lists.length; i++) {
-        if (board.lists[i].collectionId === req.body[1].collId) {
+        if (board.lists[i].collectionId === req.body.collId) {
             boardIndex = i;
             break;
         }
     }
     const todo = new Todo({
-        id: counter.todosIDs++,
-        title: req.body[0].title,
+        id: counter.idCounter++,
+        title: req.body.title,
         status: true,
     })
-    console.log(todo, req.body, counter, boardIndex)
     if(!todo || !counter){
         return res.status(404).json({message: 'not found'})
     }
@@ -43,7 +42,7 @@ router.post('/todo', async (req, res) => {
     board.lists[boardIndex].todos.push(todo);
     try {
         await board.save();
-        await Counter.updateOne({name: 'default'}, {$inc: { todosIDs: 1 }} ); // delete old
+        await Counter.updateOne({name: 'default'}, {$inc: { idCounter: 1 }} ); // delete old
         res.status(200).json(todo)
         console.log(`todo was posted`);
     } catch (e) {
@@ -56,17 +55,24 @@ router.delete('/todo-delete', async (req, res) => {
     if(!user){
         return res.status(400).json({message:'no auth'})
     }
-    let board = await Board.findOne({id: req.body[2].boardId, author: req.headers["email"]});
+    let zalupa = {
+        id: req.body.id,
+        title: req.body.title,
+        status: req.body.status,
+        collId: req.body.collId,
+        boardId: req.body.boardId,
+    }
+    let board = await Board.findOne({id: req.body.boardId, author: req.headers["email"]});
     let boardIndex;
     let todoIndex;
     for (let i=0; i<board.lists.length; i++) {
-        if (board.lists[i].collectionId === req.body[1].collId) {
+        if (board.lists[i].collectionId === req.body.collId) {
             boardIndex = i;
             break;
         }
     }
     for (let j=0; j<board.lists[boardIndex].todos.length; j++) {
-        if (board.lists[boardIndex].todos[j].id === req.body[0].task.id) {
+        if (board.lists[boardIndex].todos[j].id === req.body.id) {
             todoIndex = j;
             break;
         }

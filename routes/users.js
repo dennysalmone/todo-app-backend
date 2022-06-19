@@ -78,10 +78,10 @@ router.post(
         const user = new User({
             email: req.body.email,
             password: hashedPassword,
-            userId: counter.userIDs++
+            userId: counter.idCounter++
         })
         await user.save()
-        await Counter.updateOne({name: 'default'}, {$inc: { userIDs: 1 }} );
+        await Counter.updateOne({name: 'default'}, {$inc: { idCounter: 1 }} );
         console.log(`Пользователь создан по почте ${req.body.email}`)
         return res.status(201).json({message: 'User had created'})
     }
