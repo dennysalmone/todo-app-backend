@@ -45,16 +45,51 @@ router.get('/boards', async (req, res) => {
     if(!user){
         return res.status(400).json({message:'no auth'})
     }
-    let boards = await Board.find( { author: req.headers["email"] } )
+    let boards = await Board.find( { acess: req.headers["email"] } )
     if(!boards){
         return res.status(404).json({message: 'not found'})
     }
-    console.log(`Boards was getted`);
-    res.status(200).json(boards)
+    let getBoards = {email: req.headers["email"], boards: boards}
+    res.status(200).json(getBoards)
 })
 
+router.delete('/delete-board', async (req, res) => {
+    let user = await User.findOne({email: req.headers["email"]})
+    if(!user){
+        return res.status(400).json({message:'no auth'})
+    }
+    if(!req.body){
+        return res.status(404).json({message: 'not found'})
+    }
+    try {
+        await Board.deleteOne({id: req.body.boardId})
+        res.status(200).json({message:'WAS DELETED'})
+        console.log(`todolist was deleted`);
+    } catch (e) {
+        console.log(`Error: ${e.message}`);
+    }
+})
 
-
+router.post('/boards-acess', async (req, res) => {
+    let user = await User.findOne({email: req.headers["email"]})
+    if(!user){
+        return res.status(400).json({message:'no auth'})
+    }
+    let board = await Board.findOne({id: req.body.boardId, author: req.headers["email"]});
+    if(!board || !req.body.acess){
+        return res.status(404).json({message: 'not found'})
+    }
+    // board.acess = req.body.acess
+    // console.log(board)
+    try {
+        // await board.save();
+        await Board.updateOne({id: req.body.boardId, author: req.headers["email"]}, {$set : { acess : req.body.acess } } );
+        res.status(200).json()
+        console.log(`board was changed`);
+    } catch (e) {
+        console.log(`Error: ${e.message}`);
+    }
+})
 
 
 

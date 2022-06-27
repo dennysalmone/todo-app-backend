@@ -23,7 +23,7 @@ router.delete('/delete-list', async (req, res) => {
         return res.status(404).json({message: 'not found'})
     }
     try {
-        await Board.updateOne({id: req.body.boardId}, {$pull : { lists : { collectionId : req.body.collId } } } );
+        await Board.updateOne({id: req.body.boardId, acess: req.headers["email"]}, {$pull : { lists : { collectionId : req.body.collId } } } );
         res.status(200).json({message:'WAS DELETED'})
         console.log(`todolist was deleted`);
     } catch (e) {
@@ -45,7 +45,7 @@ router.post('/todo-list', async (req, res) => {
         todos: [],
     });
 
-    let board = await Board.findOne({id: req.body.boardId, acess: [req.headers["email"]]});
+    let board = await Board.findOne({id: req.body.boardId, acess: req.headers["email"]});
 
     if(!board || !todoList){
         return res.status(404).json({message: 'not found'})

@@ -20,7 +20,7 @@ router.post('/todo', async (req, res) => {
         return res.status(400).json({message:'no auth'})
     }
     const counter = await Counter.findOne({name: 'default'});
-    const board = await Board.findOne({id: req.body.boardId, author: req.headers["email"]});
+    const board = await Board.findOne({id: req.body.boardId, acess: req.headers["email"]});
     let boardIndex;
     for (let i=0; i<board.lists.length; i++) {
         if (board.lists[i].collectionId === req.body.collId) {
@@ -62,7 +62,7 @@ router.delete('/todo-delete', async (req, res) => {
         collId: req.body.collId,
         boardId: req.body.boardId,
     }
-    let board = await Board.findOne({id: req.body.boardId, author: req.headers["email"]});
+    let board = await Board.findOne({id: req.body.boardId, acess: req.headers["email"]});
     let boardIndex;
     let todoIndex;
     for (let i=0; i<board.lists.length; i++) {
@@ -102,7 +102,7 @@ router.post('/change', async (req, res) => {
         return res.status(400).json({message:'no auth'})
     }
     console.log(req.body)
-    let board = await Board.findOne({id: req.body.boardId, author: req.headers["email"]});
+    let board = await Board.findOne({id: req.body.boardId, acess: req.headers["email"]});
     let boardIndex;
     let todoIndex;
     for (let i=0; i<board.lists.length; i++) {
