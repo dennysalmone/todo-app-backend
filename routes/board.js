@@ -24,7 +24,7 @@ router.post('/boards-create', async (req, res) => {
         name: req.body.name,
         id: counter.idCounter++,
         author: req.headers["email"],
-        acess: [req.headers["email"]],
+        access: [req.headers["email"]],
         lists: []
     });
     if(!board){
@@ -45,7 +45,7 @@ router.get('/boards', async (req, res) => {
     if(!user){
         return res.status(400).json({message:'no auth'})
     }
-    let boards = await Board.find( { acess: req.headers["email"] } )
+    let boards = await Board.find( { access: req.headers["email"] } )
     if(!boards){
         return res.status(404).json({message: 'not found'})
     }
@@ -70,20 +70,20 @@ router.delete('/delete-board', async (req, res) => {
     }
 })
 
-router.post('/boards-acess', async (req, res) => {
+router.post('/boards-access', async (req, res) => {
     let user = await User.findOne({email: req.headers["email"]})
     if(!user){
         return res.status(400).json({message:'no auth'})
     }
     let board = await Board.findOne({id: req.body.boardId, author: req.headers["email"]});
-    if(!board || !req.body.acess){
+    if(!board || !req.body.access){
         return res.status(404).json({message: 'not found'})
     }
-    // board.acess = req.body.acess
+    // board.access = req.body.access
     // console.log(board)
     try {
         // await board.save();
-        await Board.updateOne({id: req.body.boardId, author: req.headers["email"]}, {$set : { acess : req.body.acess } } );
+        await Board.updateOne({id: req.body.boardId, author: req.headers["email"]}, {$set : { access : req.body.access } } );
         res.status(200).json()
         console.log(`board was changed`);
     } catch (e) {

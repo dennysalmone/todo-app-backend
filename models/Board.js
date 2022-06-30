@@ -4,7 +4,7 @@ const schema = new Schema ({
     name:       { type: String, required: true },
     id:         { type: Number },
     author:     { type: String, required: true },
-    acess:      { type: Array, required: true },
+    access:      { type: Array, required: true },
     lists:      [{
         name:           { type: String, required: true },
         desc:           { type: String, required: true },
